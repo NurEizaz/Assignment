@@ -19,6 +19,7 @@ const port = process.env.PORT || 3000
 
 const swaggerUi = require('swagger-ui-express');
 const swaggerJsdoc = require('swagger-jsdoc');
+const { Router } = require("express");
 const options = {
 	definition: {
 		openapi: '3.0.0',
@@ -52,7 +53,7 @@ app.get('/hello', (req, res) => {
  *       properties:
  *         _id: 
  *           type: string
- *         username: 
+ *         id: 
  *           type: string
  *         phone: 
  *           type: string
@@ -70,7 +71,7 @@ app.get('/hello', (req, res) => {
  *           schema: 
  *             type: object
  *             properties:
- *               username: 
+ *               id: 
  *                 type: string
  *               password: 
  *                 type: string
@@ -82,22 +83,23 @@ app.get('/hello', (req, res) => {
  *             schema:
  *               $ref: '#/components/schemas/User'
  *       401:
- *         description: Invalid username or password
+ *         description: Invalid id or password
  */
 app.post('/login', async (req, res) => {
 	console.log(req.body);
 
-	let user = await User.login(req.body.username, req.body.password);
+	let user = await User.login(req.body.id, req.body.password);
 
-	if (user.status == 'invalid username') {
-		res.status(401).send("Invalid username or password");
+	if (user.status == ('invalid id' || 'invalid password')) {
+		res.status(401).send("Invalid id or password");
 		return
 	}
 	
 	res.status(200).json({
 		_id: user._id,
-		username: user.username,
-		phone: user.phone,
+		id: user.id,
+		name: user.name,
+		division: user.division,
 	});
 })
 /**
@@ -112,14 +114,14 @@ app.post('/login', async (req, res) => {
  *           schema: 
  *             type: object
  *             properties:
- *               username: 
+ *               id: 
  *                 type: string
  *               password: 
  *                 type: string
  *               name: 
  *                 type: string
- *               officerNo:
- *                 type: integer
+ *               division:
+ *                 type: string
  *               rank: 
  *                 type: string
  *               phone: 
@@ -136,28 +138,110 @@ app.post('/login', async (req, res) => {
  */
 app.post('/register', async (req, res) => {
 	console.log(req.body);
-	const reg = await User.register(req.body.username, req.body.password, req.body.name, req.bodyofficerno, req.body.rank, req.body.phone);
+	const reg = await User.register(req.body.id, req.body.password, req.body.name, req.body.division, req.body.rank, req.body.phone);
 	console.log(reg);
 	res.json({reg})
 })
-
 /**
  * @swagger
- * /visitor/{id}:
+ * /update:
+ *   patch:
+ *     description: User Update
+ *     requestBody:
+ *       required: true
+ *       content:
+ *         application/json:
+ *           schema: 
+ *             type: object
+ *             properties:
+ *               id: 
+ *                 type: string
+ *               password: 
+ *                 type: string
+ *               name: 
+ *                 type: string
+ *               division:
+ *                 type: string
+ *               rank: 
+ *                 type: string
+ *               phone: 
+ *                 type: string
+ *     responses:
+ *       200:
+ *         description: Successful Update user
+ *         content:
+ *           application/json:
+ *             schema:
+ *               $ref: '#/components/schemas/User'
+ *       401:
+ *         description: Invalid id or password
+ */
+app.patch('/update', async (req, res) => {
+	const update =await User.update(req.body.id, req.body.name, req.body.division, req.body.rank, req.body.phone);
+	res.json({update})
+})
+/**
+ * @swagger
+ * /staff/{id}:
  *   get:
- *     description: Get visitor by id
+ *     description: Get staff by id
  *     parameters:
  *       - in: path
  *         name: id 
  *         schema: 
  *           type: string
  *         required: true
- *         description: visitor id
+ *         description: Staff id
+ *     responses:
+ *       200:
+ *         description: Search successful
+ *         content:
+ *           application/json:
+ *             schema:
+ *               $ref: '#/components/schemas/User'
+ *       401:
+ *         description: Invalid id
  */
-app.get('/visitor/:id', async (req, res) => {
-	console.log(req.params.id);
 
-	res.status(200).json({})
+app.get('/staff/:id', async (req, res) => {
+	console.log(req.params.id);
+	const cari = await User.find(req.params.id);
+	res.status(200).json({cari})
+});
+
+// app.get('/visitor/:id', async(req, res) => {
+// 	console.log(req.params.id);
+// 	const cari = await User.find((x) => x.username === parseInt(req.params.id));
+// 	res.status(200).json(cari);
+// });
+/**
+ * @swagger
+ * /delete:
+ *   delete:
+ *     description: Delete User
+ *     requestBody:
+ *       required: true
+ *       content:
+ *         application/json:
+ *           schema: 
+ *             type: object
+ *             properties:
+ *               id: 
+ *                 type: string
+ *     responses:
+ *       200:
+ *         description: Successful Delete user
+ *         content:
+ *           application/json:
+ *             schema:
+ *               $ref: '#/components/schemas/User'
+ *       401:
+ *         description: Invalid id or password
+ */
+app.delete('/delete',async (req,res) => {
+	console.log(req.body);
+	let buang = await User.delete(req.body.id);
+	res.json({buang})
 })
 
 app.listen(port, () => {

@@ -15,9 +15,9 @@ class User {
 	 * @param {*} password 
 	 * @param {*} phone 
 	 */
-	static async register(username, password, phone) {
+	static async register(id, password, name, division, rank, phone) {
 		// TODO: Check if username exists
-		const duplicate = await users.findOne({ username: username })
+		const duplicate = await users.findOne({ id: id })
 		
 		if (duplicate) {
 			return { status: "duplicate username" }
@@ -29,18 +29,21 @@ class User {
 
 		// TODO: Save user to database
 		return await users.insertOne({
-			username: username,
+			id: id,
 			password: hashed,
+			name: name,
+			division: division,
+			rank: rank,
 			phone: phone,
 		});
 	}
 
-	static async login(username, password) {
+	static async login(id, password) {
 		// TODO: Check if username exists
-		const user = await users.findOne({ username: username })
+		const user = await users.findOne({ id: id })
 
 		if(!user) {
-			return { status: "invalid username" }
+			return { status: "invalid id" }
 		}
 
 		// TODO: Validate password
@@ -54,8 +57,19 @@ class User {
 		return user;
 	}
 
-	static async delete(username) {
-		return users.deleteOne({username: username})
+	static async delete(id) {
+		return users.deleteOne({id: id})
+	}
+	static async update(id, name, division, rank, phone) {
+		return users.updateOne({id: id},{$set:{
+			name: name,
+			division: division,
+			rank: rank,
+			phone: phone,
+		}})
+	}
+	static async find(id) {
+		return users.findOne({id: id})
 	}
 }
 
