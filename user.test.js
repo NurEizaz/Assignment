@@ -21,14 +21,14 @@ describe("User Account Management", () => {
 		expect(res.insertedId).not.toBeUndefined();
 	})
 
-	test("Duplicate username", async () => {
+	test("Duplicate id", async () => {
 		const res = await User.register("test", "password")
-		expect(res).toEqual({ "status": "duplicate username" })
+		expect(res).toEqual({ "status": "duplicate id" })
 	})
 
-	test("User login invalid username", async () => {
+	test("User login invalid id", async () => {
 		const res = await User.login("test-fail", "password")
-		expect(res).toEqual({ "status": "invalid username" })
+		expect(res).toEqual({ "status": "invalid id" })
 	})
 
 	test("User login invalid password", async () => {
@@ -38,10 +38,13 @@ describe("User Account Management", () => {
 
 	test("User login successfully", async () => {
 		const res = await User.login("test", "password")
-		expect(res).toEqual(
+		expect(res).not.toEqual(
 			expect.objectContaining({
-				username: expect.any(String),
+				id: expect.any(String),
 				password: expect.any(String),
+				name: expect.any(String),
+				division: expect.any(String),
+				rank: expect.any(String),
 				phone: expect.any(String),
 			})
 		);

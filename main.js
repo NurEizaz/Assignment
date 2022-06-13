@@ -19,7 +19,7 @@ const port = process.env.PORT || 3000
 
 const swaggerUi = require('swagger-ui-express');
 const swaggerJsdoc = require('swagger-jsdoc');
-const { Router } = require("express");
+//const { Router } = require("express");
 const options = {
 	definition: {
 		openapi: '3.0.0',
@@ -37,7 +37,7 @@ app.use(express.json())
 app.use(express.urlencoded({ extended: false }))
 
 app.get('/', (req, res) => {
-	res.send('Hello World')
+	res.send('Hello World1')
 })
 
 app.get('/hello', (req, res) => {
@@ -100,6 +100,7 @@ app.post('/login', async (req, res) => {
 		id: user.id,
 		name: user.name,
 		division: user.division,
+		token: generateAccessToken({id: user.id})
 	});
 })
 /**
@@ -243,7 +244,23 @@ app.delete('/delete',async (req,res) => {
 	let buang = await User.delete(req.body.id);
 	res.json({buang})
 })
+const jwt = require('jsonwebtoken');
+function generateAccessToken(payload){
+	return jwt.sign(payload, "my-super-secret",{expiresIn: '30s'});
+}
+function verifyToken(req,res, next){
+	const authHeader = req.headers['authorization']
+	const token = authHeader && authHeader.split(' ')[1]
 
+	if(token == null) return res.sendStatus(401)
+
+	jwt.verify(token, "my-super-secret",(err, user) => {
+		console.log(err)
+		if(err) return res.sendStatus(403)
+		req.user = user
+		next()
+	})
+}
 app.listen(port, () => {
 	console.log(`Example app listening on port ${port}`)
 })

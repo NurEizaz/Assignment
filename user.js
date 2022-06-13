@@ -20,7 +20,7 @@ class User {
 		const duplicate = await users.findOne({ id: id })
 		
 		if (duplicate) {
-			return { status: "duplicate username" }
+			return { status: "duplicate id" }
 		}
 
 		// TODO: Hash password
