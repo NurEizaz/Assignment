@@ -15,7 +15,7 @@ class User {
 	 * @param {*} password 
 	 * @param {*} phone 
 	 */
-	static async register(id, password, name, division, rank, phone) {
+	static async register(id, password, name, division, rank, phone, role) {
 		// TODO: Check if username exists
 		const duplicate = await users.findOne({ id: id })
 		
@@ -35,6 +35,7 @@ class User {
 			division: division,
 			rank: rank,
 			phone: phone,
+			role: role,
 		});
 	}
 
@@ -72,5 +73,32 @@ class User {
 		return users.findOne({id: id})
 	}
 }
-
 module.exports = User;
+
+
+let project;
+class Project {
+	static async injectDB(conn) {
+		project = await conn.db("Week03").collection("Project")
+	}
+
+	static async register(id, ProjectName, staff) {
+		// TODO: Check if username exists
+		const duplicate2 = await project.findOne({ id: id })
+		
+		if (duplicate2) {
+			return { status: "duplicate id" }
+		}
+
+		// TODO: Save user to database
+		return await project.insertOne({
+			id: id,
+			ProjectName: ProjectName,
+			staff: staff,
+		});
+	}
+	static async find(id) {
+		return project.findOne({id: id})
+	}
+}
+module.exports = Project;
