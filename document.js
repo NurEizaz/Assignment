@@ -1,10 +1,10 @@
 //const bcrypt = require('bcrypt');
 
-let document;
+let documents;
 
 class Document {
 	static async injectDB(conn) {
-		document = await conn.db("Week03").collection("Document Server");
+		documents = await conn.db("OfficeMS").collection("Document_Server");
 	}
 	/**
 	 * @remarks
@@ -16,25 +16,25 @@ class Document {
 	 */
 	static async register(id, FileName) {
 		// TODO: Check if username exists
-		const duplicate = await document.findOne({ id: id });
+		const duplicate = await documents.findOne({ id: id });
 		
 		if (duplicate) {
 			return { status: "duplicate id" }
 		}
 
 		// TODO: Save user to database
-		return await users.insertOne({
-			id1: id,
+		return await documents.insertOne({
+			id: id,
 			FileName: FileName,
 		});
 	};
 
 	static async delete(id) {
-		return document.deleteOne({id: id})
+		return documents.deleteOne({id: id})
 	}
 
 	static async find(id) {
-		return document.findOne({id: id})
+		return documents.findOne({id: id})
 	}
 }
 module.exports = Document;

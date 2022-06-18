@@ -1,7 +1,8 @@
 const MongoClient = require("mongodb").MongoClient;
 const User = require("./user");
 const Document = require("./document");
-const Project = require("./user");
+const Project = require("./project");
+const Staff = require("./staff");
 
 MongoClient.connect(
 	// TODO: Connection 
@@ -13,6 +14,9 @@ MongoClient.connect(
 }).then(async client => {
 	console.log('Connected to MongoDB');
 	User.injectDB(client);
+	Document.injectDB(client);
+	Project.injectDB(client);
+	Staff.injectDB(client);
 })
 
 const express = require('express')
@@ -98,11 +102,11 @@ app.get('/hello', (req, res) => {
  *           schema: 
  *             type: object
  *             properties:
- *               id1: 
+ *               id: 
  *                 type: string
  *               FileName: 
  *                 type: string
-*     responses:
+ *     responses:
  *       200:
  *         description: Successful Register new user
  *       401:
@@ -131,7 +135,7 @@ app.get('/hello', (req, res) => {
  *           type: string
  *         required: true
  *         description: Document id
-  *     responses:
+ *     responses:
  *       200:
  *         description: Search successful
  *       401:
@@ -139,7 +143,7 @@ app.get('/hello', (req, res) => {
  */
 
  app.get('/document/:id', async (req, res) => {
-	console.log(req.user);
+	console.log(req.documents);
 	const cari = await Document.find(req.params.id);
 	if (cari)
 		res.status(200).json(cari)
@@ -166,6 +170,11 @@ app.get('/hello', (req, res) => {
  *                 type: string
  *               staff:
  *                 type: string
+ *     responses:
+ *       200:
+ *         description: Search successful
+ *       401:
+ *         description: Invalid id 
  */
  app.post('/register/project', async (req, res) => {
 	console.log(req.body);
@@ -191,7 +200,7 @@ app.get('/hello', (req, res) => {
  *           type: string
  *         required: true
  *         description: Project id
-  *     responses:
+ *     responses:
  *       200:
  *         description: Search successful
  *       401:
@@ -199,7 +208,7 @@ app.get('/hello', (req, res) => {
  */
 
  app.get('/project/:id', async (req, res) => {
-	console.log(req.user);
+	console.log(req.project);
 	const cari = await Project.find(req.params.id);
 	if (cari)
 		res.status(200).json(cari)
@@ -278,21 +287,21 @@ app.post('/login/admin', async (req, res) => {
  app.post('/login/staff', async (req, res) => {
 	console.log(req.body);
 
-	let user = await User.login(req.body.id, req.body.password);
+	let staff = await Staff.login(req.body.id, req.body.password);
 
-	if (user.status == ('invalid id')) {
+	if (staff.status == ('invalid id')) {
 		res.status(401).send("Invalid id or password");
 		return
 	}
-	if (user.status == ('invalid password')) {
+	if (staff.status == ('invalid password')) {
 		res.status(401).send("Invalid id or password");
 		return
 	}
 	res.status(200).json({
-		_id: user._id,
-		id: user.id,
-		name: user.name,
-		division: user.division,
+		_id: staff._id,
+		id: staff.id,
+		name: staff.name,
+		division: staff.division,
 	});
 })
 /**
@@ -322,6 +331,11 @@ app.post('/login/admin', async (req, res) => {
  *                 type: string
  *               role:
  *                 type: string
+ *     responses:
+ *       200:
+ *         description: Successful Register New Id
+ *       401:
+ *         description: Invalid id or password
  */
 app.post('/register/admin', async (req, res) => {
 	console.log(req.body);
@@ -362,10 +376,15 @@ app.post('/register/admin', async (req, res) => {
  *                 type: string
  *               phone: 
  *                 type: string
+ *     responses:
+ *       200:
+ *         description: Successful Register New Id
+ *       401:
+ *         description: Invalid id or password
  */
  app.post('/register/staff', async (req, res) => {
 	console.log(req.body);
-	const reg = await User.register(
+	const reg = await Staff.register(
 		req.body.id, 
 		req.body.password, 
 		req.body.name, 
@@ -379,7 +398,57 @@ app.post('/register/admin', async (req, res) => {
 
 /**
  * @swagger
- * /update:
+ * /update/admin:
+ *   patch:
+ *     description: User Update
+ *     tags: [Admin]
+ *     requestBody:
+ *       required: true
+ *       content:
+ *         application/json:
+ *           schema: 
+ *             type: object
+ *             properties:
+ *               id: 
+ *                 type: string
+ *               password: 
+ *                 type: string
+ *               name: 
+ *                 type: string
+ *               division:
+ *                 type: string
+ *               rank: 
+ *                 type: string
+ *               phone: 
+ *                 type: string
+ *     responses:
+ *       200:
+ *         description: Successful Update user
+ *       401:
+ *         description: Invalid id or password
+ */
+app.patch('/update/admin', async (req, res) => {
+	console.log(req.body);
+
+	const user = await User.login(req.body.id, req.body.password);
+
+	if (user.status == ('invalid id' || 'invalid password')) {
+		res.status(401).send("Invalid id or password");
+		return
+	}
+	const update =await User.update(
+		req.body.id,
+		req.body.name, 
+		req.body.division, 
+		req.body.rank, 
+		req.body.phone
+	);
+	res.json({update})
+})
+
+/**
+ * @swagger
+ * /update/staff:
  *   patch:
  *     description: User Update
  *     tags: [Staff]
@@ -408,16 +477,16 @@ app.post('/register/admin', async (req, res) => {
  *       401:
  *         description: Invalid id or password
  */
-app.patch('/update', async (req, res) => {
+ app.patch('/update/staff', async (req, res) => {
 	console.log(req.body);
 
-	let user = await User.login(req.body.id, req.body.password);
+	let staff = await Staff.login(req.body.id, req.body.password);
 
-	if (user.status == ('invalid id' || 'invalid password')) {
+	if (staff.status == ('invalid id' || 'invalid password')) {
 		res.status(401).send("Invalid id or password");
 		return
 	}
-	const update =await User.update(
+	const update =await Staff.update(
 		req.body.id,
 		req.body.name, 
 		req.body.division, 
@@ -427,7 +496,7 @@ app.patch('/update', async (req, res) => {
 	res.json({update})
 })
 
-//app.use(verifyToken);
+app.use(verifyToken);
 
 /**
  * @swagger
@@ -450,9 +519,8 @@ app.patch('/update', async (req, res) => {
  */
 
 app.get('/staff/:id', async (req, res) => {
-	//console.log(req.params.id);
-	console.log(req.user);
-	const cari = await User.find(req.params.id);
+	console.log(req.staff);
+	const cari = await Staff.find(req.params.id);
 	if (cari)
 		res.status(200).json(cari)
 	else 
@@ -473,6 +541,11 @@ app.get('/staff/:id', async (req, res) => {
  *             properties:
  *               id: 
  *                 type: string
+ *     responses:
+ *       200:
+ *         description: Delete successful
+ *       401:
+ *         description: Invalid id
  */
 app.delete('/delete',async (req,res) => {
 	console.log(req.body);
@@ -482,7 +555,7 @@ app.delete('/delete',async (req,res) => {
 
 /**
  * @swagger
- * /document/delete:
+ * /delete/document:
  *   delete:
  *     description: Delete File
  *     tags: [Document Server]
@@ -495,8 +568,13 @@ app.delete('/delete',async (req,res) => {
  *             properties:
  *               id: 
  *                 type: string
+ *     responses:
+ *       200:
+ *         description: Delete successful
+ *       401:
+ *         description: Invalid id
  */
- app.delete('/document/delete',async (req,res) => {
+ app.delete('/delete/document',async (req,res) => {
 	console.log(req.body);
 	let buang = await Document.delete(req.body.id);
 	res.json({buang})

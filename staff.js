@@ -1,10 +1,10 @@
 const bcrypt = require('bcrypt');
 
-let users;
+let staff;
 
-class User {
+class Staff {
 	static async injectDB(conn) {
-		users = await conn.db("OfficeMS").collection("users")
+		staff = await conn.db("OfficeMS").collection("users")
 	}
 
 	/**
@@ -17,7 +17,7 @@ class User {
 	 */
 	static async register(id, password, name, division, rank, phone, role) {
 		// TODO: Check if username exists
-		const duplicate = await users.findOne({ id: id })
+		const duplicate = await staff.findOne({ id: id })
 		
 		if (duplicate) {
 			return { status: "duplicate id" }
@@ -28,20 +28,19 @@ class User {
 		const hashed = await bcrypt.hash(password, salt)
 
 		// TODO: Save user to database
-		return await users.insertOne({
+		return await staff.insertOne({
 			id: id,
 			password: hashed,
 			name: name,
 			division: division,
 			rank: rank,
 			phone: phone,
-			role: role,
 		});
 	}
 
 	static async login(id, password) {
 		// TODO: Check if username exists
-		const user = await users.findOne({ id: id })
+		const user = await staff.findOne({ id: id })
 
 		if(!user) {
 			return { status: "invalid id" }
@@ -59,10 +58,10 @@ class User {
 	}
 
 	static async delete(id) {
-		return users.deleteOne({id: id})
+		return staff.deleteOne({id: id})
 	}
 	static async update(id, name, division, rank, phone) {
-		return users.updateOne({id: id},{$set:{
+		return staff.updateOne({id: id},{$set:{
 			name: name,
 			division: division,
 			rank: rank,
@@ -70,7 +69,7 @@ class User {
 		}})
 	}
 	static async find(id) {
-		return users.findOne({id: id})
+		return staff.findOne({id: id})
 	}
 }
-module.exports = User;
+module.exports = Staff;
